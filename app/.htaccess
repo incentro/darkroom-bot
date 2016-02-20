@@ -1,0 +1,8 @@
+RewriteEngine On
+RewriteCond %{HTTPS} !on
+RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+RewriteCond %{HTTPS} on
+RewriteCond %{REQUEST_URI} !^/index\.html$
+RewriteCond %{REQUEST_URI} !^/darkroom\.bot\.php$
+RewriteCond %{REQUEST_URI}  !(asset) [NC]
+RewriteRule ^(.*)$ /darkroom.bot.php?path=$1 [L]

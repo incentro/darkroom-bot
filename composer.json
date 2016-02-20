@@ -1,0 +1,8 @@
+{
+    "require": {
+        "abeautifulsite/simpleimage": "^2.6"
+    },
+    "config": {
+        "vendor-dir": "app/vendor"
+    }
+}
