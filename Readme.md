@@ -14,7 +14,7 @@ Look below for development instructions
 
 # Usage
 
-Navigate to _**/** width **/** height_ in your browser to get a random image in given _width_ or _height_. This can be either an integer to indicate the number of pixels or auto to allow to automatically scale.
+Navigate to /_width_/_height_ in your browser to get a random image in given _width_ or _height_. This can be either an integer to indicate the number of pixels or auto to allow to automatically scale.
 
 If both a _width_ and _height_ are given in pixels the picture will be resized to cover the given area. If the image is larger than the given ratio the excess will be cropped to keep aspect ratio.
  
