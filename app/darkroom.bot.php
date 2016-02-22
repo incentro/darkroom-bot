@@ -1,10 +1,10 @@
 <?php
     $config = [];
-    $config['debug'] =  true;
+    $config['debug'] =  false;
     $config['maxImageWidthHeight'] = 2000;
     $config['imagePath'] = 'images/';
     $config['cachePath'] = '_cache/';
-    $config['defaultCollection'] = 'incentro-amsterdam';
+    $config['defaultCollection'] = 'random';
 
     ///////////////////////////////////////////////////////////////////////////
     // 0. setup document
@@ -221,6 +221,10 @@
         $imageConfiguration['collection'] = $config['defaultCollection'];
     }
 
+    if ($imageConfiguration['collection'] === 'random'){
+        $imageConfiguration['collection'] = array_rand(collectionMap());
+    }
+
 
     // check if non random image exists in current imageMap, if not, fallback to random image
     if ($imageConfiguration['image'] !== 'random' && !array_key_exists($imageConfiguration['image'], imageMap($imageConfiguration['collection']))){
@@ -292,4 +296,3 @@
 
     // send image
     readfile($imageCachedFilePath);
-    
