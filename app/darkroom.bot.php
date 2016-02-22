@@ -105,7 +105,8 @@
 
 
         // if global image map is not set, get from cache
-        if ($collectionMap[$collectionName] === false){
+        $imageMap = $collectionMap[$collectionName];
+        if ($imageMap === false){
             $imageMapCacheKey = 'image-map-' . $collectionName;
             $imageMap = cache_get($imageMapCacheKey);
 
@@ -164,7 +165,7 @@
         $imageConfiguration['width'] = 'auto';
         $imageConfiguration['height'] = 'auto';
         $imageConfiguration['image'] = 'random';
-        $imageConfiguration['image'] = $config['defaultCollction'];
+        $imageConfiguration['image'] = $config['defaultCollection'];
 
 
         // get width & height from path
@@ -216,8 +217,8 @@
 
 
     // check if colleciton exists
-    if (!isset($imageConfiguration['collection']) || imageMap($imageConfiguration['collection'] === false){
-        $imageConfiguration['image'] = $config['defaultCollection'];
+    if (!isset($imageConfiguration['collection']) || imageMap($imageConfiguration['collection']) === false){
+        $imageConfiguration['collection'] = $config['defaultCollection'];
     }
 
 
@@ -230,8 +231,6 @@
     if ($imageConfiguration['image'] === 'random'){
         $imageConfiguration['image'] = array_rand(imageMap($imageConfiguration['collection']));
     }
-
-
 
 
 
@@ -252,7 +251,7 @@
         require __DIR__ . '/vendor/autoload.php';
 
         // create new image from given input image
-        $image = new abeautifulsite\SimpleImage($config['imagePath'] . imageMap($imageConfig['collection'])[$imageConfiguration['image']]);
+        $image = new abeautifulsite\SimpleImage($config['imagePath'] . $imageConfiguration['collection'] . '/' . imageMap($imageConfiguration['collection'])[$imageConfiguration['image']]);
 
         // auto rotate according to exif data
         $image->auto_orient();
