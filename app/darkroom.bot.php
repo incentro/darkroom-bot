@@ -4,6 +4,7 @@
     $config['maxImageWidthHeight'] = 2000;
     $config['imagePath'] = 'images/';
     $config['cachePath'] = '_cache/';
+    $config['defaultCollection'] = 'incentro-amsterdam';
 
     ///////////////////////////////////////////////////////////////////////////
     // 0. setup document
@@ -68,23 +69,53 @@
         }
     }
 
+    $collectionMap = false;
+    function &collectionMap(){
+        global $collectionMap, $config;
+
+        if ($collectionMap === false){
+            $collectionMap = cache_get('collection-map');
+
+            if ($collectionMap === null){
+                $collectionNames = array_filter(scandir($config['imagePath']), function($directoryItem){
+                    global $config;
+                    return $directoryItem !== '.' && $directoryItem !== '..' && is_dir($config['imagePath'].$directoryItem);
+                });
+
+                $collectionMap = [];
+                foreach ($collectionNames as $collectionName){
+                    $collectionMap[$collectionName] = false;
+                }
+                cache_set('collection-map', $collectionMap);
+            }
+        }
+
+        return $collectionMap;
+    }
+
+
     // Map of all images available
-    $imageMap = false;
-    function imageMap(){
-        global $config, $imageMap;
+    function imageMap($collectionName){
+        global $config;
+        $collectionMap = &collectionMap();
+
+        if ( !isset($collectionMap[$collectionName]) ){
+            return false;
+        }
+
 
         // if global image map is not set, get from cache
-        if (!$imageMap){
-            $imageMap = cache_get('image-map');
+        if ($collectionMap[$collectionName] === false){
+            $imageMapCacheKey = 'image-map-' . $collectionName;
+            $imageMap = cache_get($imageMapCacheKey);
 
             // if image map not in cache, generate map
             if ($imageMap === null){
                 $imageMap = [];
 
                 // collect all image files in images folder
-                $imageFiles = array_filter(scandir($config['imagePath']), function($imageFile){
-                    global $config;
-                    return @is_array(getimagesize($config['imagePath'].$imageFile));
+                $imageFiles = array_filter(scandir($config['imagePath'].$collectionName.'/'), function($imageFile) use($config, $collectionName){
+                    return @is_array(getimagesize($config['imagePath'].$collectionName.'/'.$imageFile));
                 });
 
                 // map each file under file name without extension
@@ -97,8 +128,9 @@
                 if (count($imageMap) === 0){
                     die('no images found');
                 }
-
-                cache_set('image-map', $imageMap);
+                
+                $collectionMap[$collectionName] = $imageMap;
+                cache_set($imageMapCacheKey, $imageMap);
             }
         }
 
@@ -132,6 +164,7 @@
         $imageConfiguration['width'] = 'auto';
         $imageConfiguration['height'] = 'auto';
         $imageConfiguration['image'] = 'random';
+        $imageConfiguration['image'] = $config['defaultCollction'];
 
 
         // get width & height from path
@@ -148,6 +181,12 @@
             // get numeric value, make sure its within allowed image width/height
             $imageConfiguration['height'] = (int)$pathParts[1];
         }
+
+
+        if (isset($_GET['collection'])){
+            $imageConfiguration['collection'] = $_GET['collection'];
+        }
+
 
         if (isset($_GET['image'])){
             $imageConfiguration['image'] = $_GET['image'];
@@ -175,15 +214,26 @@
         $imageConfiguration['height'] = min(max($imageConfiguration['height'], 1), $config['maxImageWidthHeight']);
     }
 
+
+    // check if colleciton exists
+    if (!isset($imageConfiguration['collection']) || imageMap($imageConfiguration['collection'] === false){
+        $imageConfiguration['image'] = $config['defaultCollection'];
+    }
+
+
     // check if non random image exists in current imageMap, if not, fallback to random image
-    if ($imageConfiguration['image'] !== 'random' && !array_key_exists($imageConfiguration['image'], imageMap())){
+    if ($imageConfiguration['image'] !== 'random' && !array_key_exists($imageConfiguration['image'], imageMap($imageConfiguration['collection']))){
         $imageConfiguration['image'] = 'random';
     }
 
     // select random image if needed
     if ($imageConfiguration['image'] === 'random'){
-        $imageConfiguration['image'] = array_rand(imageMap());
+        $imageConfiguration['image'] = array_rand(imageMap($imageConfiguration['collection']));
     }
+
+
+
+
 
 
 
@@ -202,7 +252,7 @@
         require __DIR__ . '/vendor/autoload.php';
 
         // create new image from given input image
-        $image = new abeautifulsite\SimpleImage($config['imagePath'] . imageMap()[$imageConfiguration['image']]);
+        $image = new abeautifulsite\SimpleImage($config['imagePath'] . imageMap($imageConfig['collection'])[$imageConfiguration['image']]);
 
         // auto rotate according to exif data
         $image->auto_orient();
