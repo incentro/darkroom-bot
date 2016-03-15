@@ -1,6 +1,6 @@
 <?php
     $config = [];
-    $config['debug'] =  false;
+    $config['debug'] =  true;
     $config['maxImageWidthHeight'] = 2000;
     $config['imagePath'] = 'images/';
     $config['cachePath'] = '_cache/';
@@ -216,11 +216,35 @@
     }
 
 
-    // check if colleciton exists
-    if (!isset($imageConfiguration['collection']) || imageMap($imageConfiguration['collection']) === false){
+    if (!isset($imageConfiguration['collection'])){
+        // if no collection is selected, revert to default
         $imageConfiguration['collection'] = $config['defaultCollection'];
+    } else {
+        // get all valid collections from input (comma separated)
+        $imageConfiguration['collection'] = array_filter(explode(',', $imageConfiguration['collection']), function($collectionName){
+            return $collectionName === 'random' || isset(collectionMap()[$collectionName]);
+        });
+
+        if ( count($imageConfiguration['collection']) === 0){
+            // if no valid collections are left, revert to default
+            $imageConfiguration['collection'] = $config['defaultCollection'];
+        }
+        elseif ( count($imageConfiguration['collection']) === 1 && $imageConfiguration['collection'][0] === 'random'){
+            // if only option is random, set random as option
+            $imageConfiguration['collection'] = 'random';
+        }
+        else {
+            // random cannot be part of a collection set, remove as selectable option
+            $imageConfiguration['collection'] = array_filter($imageConfiguration['collection'], function($collectionName){
+                return $collectionName !== 'random';
+            }); 
+
+            // pick random collection from given input
+            $imageConfiguration['collection'] = array_rand($imageConfiguration['collection']);
+        }
     }
 
+    // if selected option is random, pick random collection from available map options
     if ($imageConfiguration['collection'] === 'random'){
         $imageConfiguration['collection'] = array_rand(collectionMap());
     }
@@ -235,8 +259,6 @@
     if ($imageConfiguration['image'] === 'random'){
         $imageConfiguration['image'] = array_rand(imageMap($imageConfiguration['collection']));
     }
-
-
 
 
 
